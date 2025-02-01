@@ -548,24 +548,32 @@ def convert_chapters_to_audio(session):
             params['voice_file'] = session['voice_file'] if session['voice_file'] is not None else models[params['tts_model']][session['fine_tuned']]['voice']
             params['tts'].to(session['device'])
 
-        resume_chapter = 0
+        resume_chapter = session['start_from_chapter']
         resume_sentence = 0
 
         # Check existing files to resume the process if it was interrupted
         existing_chapters = sorted([f for f in os.listdir(session['chapters_dir']) if f.endswith(f'.{audioproc_format}')])
         existing_sentences = sorted([f for f in os.listdir(session['chapters_dir_sentences']) if f.endswith(f'.{audioproc_format}')])
+        total_chapters = len(session['chapters'])
 
+        resume_chapter = max(resume_chapter, total_chapters -1)
+        for i in range(resume_chapter):
+            resume_sentence += len(session['chapters'][i])
+        
         if existing_chapters:
-            count_chapter_files = len(existing_chapters)
-            resume_chapter = count_chapter_files - 1 if count_chapter_files > 0 else 0
+            while f'chapter_{resume_chapter}.{audioproc_format}' in existing_chapters:
+                resume_chapter += 1
+                resume_sentence += len(session['chapters'][resume_chapter])
             print(f'Resuming from chapter {count_chapter_files}')
+        current_chapter_start_sentence = resume_sentence
         if existing_sentences:
-            resume_sentence = len(existing_sentences)
+            while f'sentence_{resume_sentence}.{audioproc_format}' in existing_sentences
+                and resume_sentence < :current_chapter_start_sentence + len(session['chapters'][resume_chapter]):
+                resume_sentence += 1
             print(f'Resuming from sentence {resume_sentence}')
 
-        total_chapters = len(session['chapters'])
         total_sentences = sum(len(array) for array in session['chapters'])
-        current_sentence = 0
+        current_sentence = current_chapter_start_sentence
 
         with tqdm(total=total_sentences, desc='convert_chapters_to_audio 0.00%', bar_format='{desc}: {n_fmt}/{total_fmt} ', unit='step', initial=resume_sentence) as t:
             t.n = resume_sentence
@@ -577,21 +585,28 @@ def convert_chapters_to_audio(session):
                 sentences_count = len(sentences)
                 start = current_sentence  # Mark the starting sentence of the chapter
                 print(f"\nChapter {chapter_num} containing {sentences_count} sentences...")
-                for i, sentence in enumerate(sentences):
-                    if current_sentence >= resume_sentence:
-                        params['sentence_audio_file'] = os.path.join(session['chapters_dir_sentences'], f'{current_sentence}.{audioproc_format}')                       
-                        params['sentence'] = sentence
-                        if convert_sentence_to_audio(params, session):
-                            t.update(1)
-                            percentage = (current_sentence / total_sentences) * 100
-                            t.set_description(f'Processing {percentage:.2f}%')
-                            print(f'Sentence: {sentence}')
-                            t.refresh()
-                            if progress_bar is not None:
-                                progress_bar(current_sentence / total_sentences)
-                        else:
-                            return False
-                    current_sentence += 1
+                with tqdm(total=len(session['chapters'][x]), desc=f'Chapter {chapter_num} 0.00%', bar_format='{desc}: {n_fmt}/{total_fmt} ', unit='step', initial=0) as chapter_t:
+                    chapter_t.n = 0
+                    chapter_t.refresh()
+                    for i, sentence in enumerate(sentences):
+                        if current_sentence >= resume_sentence:
+                            params['sentence_audio_file'] = os.path.join(session['chapters_dir_sentences'], f'{current_sentence}.{audioproc_format}')                       
+                            params['sentence'] = sentence
+                            if convert_sentence_to_audio(params, session):
+                                # Update the progress bar for the chapter
+                                chapter_t.update(1)
+                                chapter_t.refresh()
+                                # Update the progress bar for the entire process
+                                t.update(1)
+                                percentage = (current_sentence / total_sentences) * 100
+                                t.set_description(f'Processing {percentage:.2f}%')
+                                print(f'Sentence ({i}/{len(sentences)}): {sentence}')
+                                t.refresh()
+                                if progress_bar is not None:
+                                    progress_bar(current_sentence / total_sentences)
+                            else:
+                                return False
+                        current_sentence += 1
                 end = current_sentence - 1
                 print(f"\nEnd of Chapter {chapter_num}")
                 if start >= resume_sentence:
@@ -949,6 +964,7 @@ def convert_ebook(args):
             session['src'] = args['ebook']
             session['script_mode'] = args['script_mode'] if args['script_mode'] is not None else NATIVE       
             session['audiobooks_dir'] = args['audiobooks_dir']
+            session['start_from_chapter'] = args['start_from_chapter']
             is_gui_process = args['is_gui_process']
             device = args['device'].lower()
             voice_file = args['voice']
@@ -1264,6 +1280,23 @@ def web_interface(args):
         gr_data = gr.State({})
         gr_modal_html = gr.HTML()
 
+        gr_tab_chapters = gr.TabItem('Chapters Preferences', visible=interface_component_options['gr_tab_chapters'])
+        with gr_tab_chapters:
+            gr.Markdown(
+                '''
+                ### Customize Chapter Preferences
+                Adjust what chapters are included in the audiobook.
+                '''
+            )
+            gr_chapter_start = gr.Slider(
+                label='Chapter Start',
+                minimum=0,
+                maximum=100,
+                step=1,
+                value=0,
+                info='Start from chapter number.'
+            )
+
         def show_modal(message):
             return f'''
             <style>
@@ -1482,7 +1515,8 @@ def web_interface(args):
         def submit_convert_btn(
             session, device, ebook_file, voice_file, language, 
             custom_model_file, temperature, length_penalty,
-            repetition_penalty, top_k, top_p, speed, enable_text_splitting, fine_tuned
+            repetition_penalty, top_k, top_p, speed, enable_text_splitting, fine_tuned,
+            start_from_chapter
         ):
             nonlocal is_converting
 
@@ -1503,7 +1537,8 @@ def web_interface(args):
                 "top_p": float(top_p),
                 "speed": float(speed),
                 "enable_text_splitting": enable_text_splitting,
-                "fine_tuned": fine_tuned
+                "fine_tuned": fine_tuned,
+                "start_from_chapter": int(start_from_chapter)
             }
 
             if args["ebook"] is None:
@@ -1596,7 +1631,8 @@ def web_interface(args):
             inputs=[
                 gr_session, gr_device, gr_ebook_file, gr_voice_file, gr_language, 
                 gr_custom_model_list, gr_temperature, gr_length_penalty,
-                gr_repetition_penalty, gr_top_k, gr_top_p, gr_speed, gr_enable_text_splitting, gr_fine_tuned
+                gr_repetition_penalty, gr_top_k, gr_top_p, gr_speed, gr_enable_text_splitting, gr_fine_tuned,
+                gr_chapter_start
             ],
             outputs=gr_conversion_progress
         ).then(

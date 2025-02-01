@@ -25,9 +25,13 @@ interface_component_options = {
 
 python_env_dir = os.path.abspath(os.path.join('.','python_env'))
 
-models_dir = os.path.abspath(os.path.join('.','models'))
-ebooks_dir = os.path.abspath(os.path.join('.','ebooks'))
-processes_dir = os.path.abspath(os.path.join('.','tmp'))
+results_dir = '.'
+if os.environ.get('GOOGLE_DRIVE_PATH') and os.path.isdir(os.environ.get('GOOGLE_DRIVE_PATH')):
+    results_dir = os.environ.get('GOOGLE_DRIVE_PATH')
+
+models_dir = os.path.abspath(os.path.join(results_dir,'models'))
+ebooks_dir = os.path.abspath(os.path.join(results_dir,'ebooks'))
+processes_dir = os.path.abspath(os.path.join(results_dir,'tmp'))
 
 audiobooks_gradio_dir = os.path.abspath(os.path.join('.','audiobooks','gui','gradio'))
 audiobooks_host_dir = os.path.abspath(os.path.join('.','audiobooks','gui','host'))
