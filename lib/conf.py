@@ -27,7 +27,8 @@ python_env_dir = os.path.abspath(os.path.join('.','python_env'))
 
 results_dir = '.'
 if os.environ.get('GOOGLE_DRIVE_PATH') and os.path.isdir(os.environ.get('GOOGLE_DRIVE_PATH')):
-    results_dir = os.environ.get('GOOGLE_DRIVE_PATH')
+    results_dir = os.path.join(os.environ.get('GOOGLE_DRIVE_PATH'), 'ebook2audiobook')
+    os.makedirs(results_dir, exist_ok=True)
 
 models_dir = os.path.abspath(os.path.join(results_dir,'models'))
 ebooks_dir = os.path.abspath(os.path.join(results_dir,'ebooks'))
