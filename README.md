@@ -82,7 +82,7 @@ Thanks to support ebook2audiobook developers!<br>
 - Best to duplicate space or run locally.
 
 ## Free Google Colab 
-[![Free Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/DrewThomasson/ebook2audiobook/blob/main/Notebooks/colab_ebook2audiobook.ipynb)
+[![Free Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/McCzarny/ebook2audiobook/blob/main/Notebooks/colab_ebook2audiobook.ipynb)
 
 ## Supported Languages
 

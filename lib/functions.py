@@ -1280,7 +1280,7 @@ def web_interface(args):
         gr_data = gr.State({})
         gr_modal_html = gr.HTML()
 
-        gr_tab_chapters = gr.TabItem('Chapters Preferences', visible=interface_component_options['gr_tab_chapters'])
+        gr_tab_chapters = gr.TabItem('Chapters Preferences')
         with gr_tab_chapters:
             gr.Markdown(
                 '''
