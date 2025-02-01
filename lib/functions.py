@@ -557,7 +557,7 @@ def convert_chapters_to_audio(session):
         existing_sentences = sorted([f for f in os.listdir(session['chapters_dir_sentences']) if f.endswith(f'.{audioproc_format}')])
         total_chapters = len(session['chapters'])
 
-        resume_chapter = max(resume_chapter, total_chapters -1)
+        resume_chapter = min(resume_chapter, total_chapters -1)
         for i in range(resume_chapter):
             resume_sentence += len(session['chapters'][i])
         
@@ -576,7 +576,7 @@ def convert_chapters_to_audio(session):
         total_sentences = sum(len(array) for array in session['chapters'])
         current_sentence = current_chapter_start_sentence
 
-        with tqdm(total=total_sentences, desc='convert_chapters_to_audio 0.00%', bar_format='{desc}: {n_fmt}/{total_fmt} ', unit='step', initial=resume_sentence) as t:
+        with tqdm(total=total_sentences, desc='convert_chapters_to_audio', bar_format='{desc}: {n_fmt}/{total_fmt} ', unit='step', initial=resume_sentence) as t:
             t.n = resume_sentence
             t.refresh()
             for x in range(resume_chapter, total_chapters):
@@ -586,7 +586,7 @@ def convert_chapters_to_audio(session):
                 sentences_count = len(sentences)
                 start = current_sentence  # Mark the starting sentence of the chapter
                 print(f"\nChapter {chapter_num} containing {sentences_count} sentences...")
-                with tqdm(total=len(session['chapters'][x]), desc=f'Chapter {chapter_num} 0.00%', bar_format='{desc}: {n_fmt}/{total_fmt} ', unit='step', initial=0) as chapter_t:
+                with tqdm(total=len(session['chapters'][x]), desc=f'Chapter {chapter_num}', bar_format='{desc}: {n_fmt}/{total_fmt} ', unit='step', initial=0) as chapter_t:
                     chapter_t.n = 0
                     chapter_t.refresh()
                     for i, sentence in enumerate(sentences):
@@ -600,8 +600,7 @@ def convert_chapters_to_audio(session):
                                 # Update the progress bar for the entire process
                                 t.update(1)
                                 percentage = (current_sentence / total_sentences) * 100
-                                t.set_description(f'Processing {percentage:.2f}%')
-                                print(f'Sentence ({i}/{len(sentences)}): {sentence}')
+                                print(f'\nSentence: {sentence}')
                                 t.refresh()
                                 if progress_bar is not None:
                                     progress_bar(current_sentence / total_sentences)
