@@ -19,6 +19,7 @@ interface_shared_expire = 72 # hours
 interface_concurrency_limit = 8 # or None for unlimited
 interface_component_options = {
     "gr_tab_preferences": True,
+    "gr_tab_chapters": True,
     "gr_voice_file": True,
     "gr_group_custom_model": True
 }
@@ -26,9 +27,13 @@ interface_component_options = {
 python_env_dir = os.path.abspath(os.path.join('.','python_env'))
 
 results_dir = '.'
-if os.environ.get('GOOGLE_DRIVE_PATH') and os.path.isdir(os.environ.get('GOOGLE_DRIVE_PATH')):
-    results_dir = os.path.join(os.environ.get('GOOGLE_DRIVE_PATH'), 'ebook2audiobook')
-    os.makedirs(results_dir, exist_ok=True)
+if os.environ.get('GOOGLE_DRIVE_PATH'):
+    print(f"Using Google Drive path: {os.environ.get('GOOGLE_DRIVE_PATH')}")
+    if os.path.isdir(os.environ.get('GOOGLE_DRIVE_PATH')):
+        results_dir = os.path.join(os.environ.get('GOOGLE_DRIVE_PATH'), 'ebook2audiobook')
+        os.makedirs(results_dir, exist_ok=True)
+    else:
+        print(f"Error: Google Drive path {os.environ.get('GOOGLE_DRIVE_PATH')} not found")
 
 models_dir = os.path.abspath(os.path.join(results_dir,'models'))
 ebooks_dir = os.path.abspath(os.path.join(results_dir,'ebooks'))

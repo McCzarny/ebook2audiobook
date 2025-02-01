@@ -550,6 +550,7 @@ def convert_chapters_to_audio(session):
 
         resume_chapter = session['start_from_chapter']
         resume_sentence = 0
+        print(f"Start processing from chapter {resume_chapter}...")
 
         # Check existing files to resume the process if it was interrupted
         existing_chapters = sorted([f for f in os.listdir(session['chapters_dir']) if f.endswith(f'.{audioproc_format}')])
@@ -567,8 +568,8 @@ def convert_chapters_to_audio(session):
             print(f'Resuming from chapter {count_chapter_files}')
         current_chapter_start_sentence = resume_sentence
         if existing_sentences:
-            while f'sentence_{resume_sentence}.{audioproc_format}' in existing_sentences
-                and resume_sentence < :current_chapter_start_sentence + len(session['chapters'][resume_chapter]):
+            while f'sentence_{resume_sentence}.{audioproc_format}' in existing_sentences \
+                and resume_sentence < current_chapter_start_sentence + len(session['chapters'][resume_chapter]):
                 resume_sentence += 1
             print(f'Resuming from sentence {resume_sentence}')
 
@@ -1268,6 +1269,23 @@ def web_interface(args):
                     info='Splits long texts into sentences to generate audio in chunks. Useful for very long inputs.'
                 )
                 
+            gr_tab_chapters = gr.TabItem('Chapters Preferences', visible=interface_component_options['gr_tab_chapters'])
+            with gr_tab_chapters:
+                gr.Markdown(
+                    '''
+                    ### Customize Chapter Preferences
+                    Adjust what chapters are included in the audiobook.
+                    '''
+                )
+                gr_chapter_start = gr.Slider(
+                    label='Chapter Start',
+                    minimum=0,
+                    maximum=100,
+                    step=1,
+                    value=0,
+                    info='Start from chapter number.'
+                )
+
         gr_state = gr.State(value="")  # Initialize state for each user session
         gr_session = gr.Textbox(label='Session', visible=False)
         gr_conversion_progress = gr.Textbox(label='Progress')
@@ -1279,23 +1297,6 @@ def web_interface(args):
         gr_read_data = gr.JSON(visible=False)
         gr_data = gr.State({})
         gr_modal_html = gr.HTML()
-
-        gr_tab_chapters = gr.TabItem('Chapters Preferences')
-        with gr_tab_chapters:
-            gr.Markdown(
-                '''
-                ### Customize Chapter Preferences
-                Adjust what chapters are included in the audiobook.
-                '''
-            )
-            gr_chapter_start = gr.Slider(
-                label='Chapter Start',
-                minimum=0,
-                maximum=100,
-                step=1,
-                value=0,
-                info='Start from chapter number.'
-            )
 
         def show_modal(message):
             return f'''
